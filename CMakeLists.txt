@@ -18,7 +18,7 @@ if ((UNIX AND NOT APPLE) OR (MSYS OR MINGW OR (CMAKE_CXX_COMPILER_ID STREQUAL "G
     target_link_options(tetgen PRIVATE -static-libgcc -static-libstdc++)
 endif()
 if (UNIX AND NOT APPLE)
-    target_link_options(tetgen PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/symbols_linux_gcc.map")
+    target_link_options(tetgen PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/CMake/symbols_linux_gcc.map")
 endif()
 if (MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

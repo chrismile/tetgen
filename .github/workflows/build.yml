@@ -84,12 +84,17 @@ jobs:
           mkdir dist/lib/cmake
           mkdir dist/lib/cmake/${proj_name}
           if [ "$RUNNER_OS" == "Windows" ]; then
-              cp "build/${proj_name}.exe" "dist/bin/"
+              if [ "${{ matrix.target_name }}" == "x86_64-windows-gnu" ]; then
+                  cp "build/${proj_name}.exe" "dist/bin/"
+              else
+                  cp "build/Release/${proj_name}.exe" "dist/bin/"
+              fi
           else
               cp "build/${proj_name}" "dist/bin/"
           fi
           cp "README" "dist/docs"
           cp "LICENSE" "dist/docs"
+          cp CMake/licenses-runtime/*.txt dist/docs/
           cp "CMake/${proj_name}Config.cmake" "dist/lib/cmake/${proj_name}/"
           cp "${proj_name}.h" "dist/include/"
           if [ "$RUNNER_OS" == "Linux" ]; then
@@ -97,5 +102,7 @@ jobs:
           elif [ "$RUNNER_OS" == "Windows" ]; then
               if [ "${{ matrix.target_name }}" == "x86_64-windows-gnu" ]; then
                   cp "build/libtet.a" dist/lib/
+              else
+                  cp "build/Release/tet.lib" dist/lib/
               fi
           fi

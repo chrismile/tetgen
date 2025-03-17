@@ -51,15 +51,22 @@ jobs:
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             target_name: x86_64-linux
+            shell: bash
           - os: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
             target_name: aarch64-linux
+            shell: bash
           # Windows targets.
           - os: windows-latest
             target_name: x86_64-windows-gnu
+            shell: 'msys2 {0}'
 
     name: "Create release-artifacts target ${{ matrix.target_name }}"
     runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
 
     env:
       artifact_name: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}-${{ matrix.target_name }}
@@ -67,8 +74,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - uses: msys2/setup-msys2@v2
+        if: matrix.target_name == 'x86_64-windows-gnu'
+        with:
+          update: true
+          install: >-
+            base-devel
+            make
+            mingw64/mingw-w64-x86_64-cmake
+            mingw64/mingw-w64-x86_64-gcc
+            mingw64/mingw-w64-x86_64-ntldd
+
       - name: Build target
-        shell: bash
         run: |
           if [ "$RUNNER_OS" == "Linux" ] && [ "${{ matrix.target_name }}" == "aarch64-linux" ]; then
               sudo apt install -y g++-aarch64-linux-gnu libc6-dev-arm64-cross
@@ -81,7 +98,6 @@ jobs:
           cmake --build build --config Release
 
       - name: Copy files
-        shell: bash
         run: |
           proj_name=${{ github.event.repository.name }}
           mkdir dist
@@ -99,6 +115,9 @@ jobs:
               fi
           else
               cp "build/${proj_name}" "dist/bin/"
+          fi
+          if [ "${{ matrix.target_name }}" == "x86_64-windows-gnu" ]; then
+              cp "$(ntldd "build/${proj_name}.exe" | grep libwinpthread | awk '{print $3}')" dist/bin/
           fi
           cp "README" "dist/docs"
           cp "LICENSE" "dist/docs"
